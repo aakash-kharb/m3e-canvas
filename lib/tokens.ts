@@ -2628,9 +2628,12 @@ export function reorderTabsPatch(it: Item, order: number[]): Pick<Item, "tabs" |
   const cur = it.tabs ?? [];
   const tabs = order.map((j) => ({ ...cur[j] }));
   const to = new Map(order.map((from, at) => [from, at]));
+  // Bars and tab rows display the first entry when no selection was saved.
+  // A dropdown with no selection must still start empty.
+  const selected = it.selected ?? (it.kind === "bottomNav" || it.kind === "navRail" || it.kind === "tabs" ? 0 : undefined);
   return {
     tabs,
-    selected: it.selected === undefined ? undefined : to.get(it.selected) ?? it.selected,
+    selected: selected === undefined ? undefined : to.get(selected) ?? selected,
     actions: remapTabActions(it.actions, (j) => to.get(j)),
   };
 }
