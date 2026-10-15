@@ -2628,12 +2628,14 @@ export function reorderTabsPatch(it: Item, order: number[]): Pick<Item, "tabs" |
   const cur = it.tabs ?? [];
   const tabs = order.map((j) => ({ ...cur[j] }));
   const to = new Map(order.map((from, at) => [from, at]));
-  // Bars and tab rows display the first entry when no selection was saved.
-  // A dropdown with no selection must still start empty.
-  const selected = it.selected ?? (it.kind === "bottomNav" || it.kind === "navRail" || it.kind === "tabs" ? 0 : undefined);
+  // Keep an implicit first selection unset while that entry stays first: Preview
+  // uses the absence of a saved selection to follow the destination that opened it.
+  const implicit = it.selected === undefined && (it.kind === "bottomNav" || it.kind === "navRail" || it.kind === "tabs");
+  const selected = it.selected ?? (implicit ? 0 : undefined);
+  const nextSelected = selected === undefined ? undefined : to.get(selected) ?? selected;
   return {
     tabs,
-    selected: selected === undefined ? undefined : to.get(selected) ?? selected,
+    selected: implicit && nextSelected === 0 ? undefined : nextSelected,
     actions: remapTabActions(it.actions, (j) => to.get(j)),
   };
 }
