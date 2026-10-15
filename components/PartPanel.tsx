@@ -717,7 +717,7 @@ export function EntryList({
             icons={icons}
             labels={labels}
             selected={selectable ? selected === i : undefined}
-            onSelect={selectable ? () => onChange({ selected: clearable && selected === i ? undefined : i }) : undefined}
+            onSelect={selectable ? () => onChange({ selected: clearable && selected === i ? undefined : i, selectionImplicit: undefined }) : undefined}
             open={pick === names[i]}
             onPick={() => setPick(pick === names[i] ? null : names[i])}
             onLabel={(label) => set(i, { label })}

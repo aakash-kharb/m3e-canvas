@@ -40,6 +40,7 @@ function dragList(kind: Kind, selected?: number) {
     start: (index: number) => (row(index).props.onDragStart as () => void)(),
     swap: (order: number[]) => (group().props.onReorder as (next: string[]) => void)(order.map((index) => names[index])),
     end: (index: number) => (row(index).props.onDragEnd as (e: { clientX: number; clientY: number }) => void)({ clientX: -1, clientY: -1 }),
+    select: (index: number) => (render().find((e) => e.props.tab === item.tabs?.[index])?.props.onSelect as () => void)(),
   };
 }
 
@@ -50,6 +51,7 @@ describe("entry selection through a whole drag", () => {
     const list = dragList(kind);
     list.start(1); list.swap([0, 2, 1]); list.end(1);
     expect(list.item.selected).toBeUndefined();
+    expect(list.item.selectionImplicit).toBeUndefined();
     expect(list.item.tabs?.map((t) => t.label)).toEqual(["Home", "Saved", "Search"]);
     expect(list.item.actions?.["tab:2"].to).toBe("search");
   });
@@ -57,8 +59,10 @@ describe("entry selection through a whole drag", () => {
     const list = dragList(kind);
     list.start(0); list.swap([1, 0, 2]);
     expect(list.item.selected).toBe(1);
+    expect(list.item.selectionImplicit).toBe(true);
     list.swap([1, 2, 0]);
     expect(list.item.selected).toBe(2);
+    expect(list.item.selectionImplicit).toBe(true);
     list.swap([1, 0, 2]); list.swap([0, 1, 2]); list.end(0);
     expect(list.item).toEqual(list.original);
   });
@@ -66,6 +70,7 @@ describe("entry selection through a whole drag", () => {
     const list = dragList(kind);
     list.start(0); list.swap([1, 0, 2]); list.swap([1, 2, 0]); list.end(0);
     expect(list.item.selected).toBe(2);
+    expect(list.item.selectionImplicit).toBe(true);
     expect(list.item.tabs?.[2].label).toBe("Home");
     expect(list.item.actions?.["tab:2"].to).toBe("home");
   });
@@ -73,11 +78,21 @@ describe("entry selection through a whole drag", () => {
     const list = dragList("bottomNav", 0);
     list.start(0); list.swap([1, 2, 0]); list.swap([0, 1, 2]); list.end(0);
     expect(list.item.selected).toBe(0);
+    expect(list.item.selectionImplicit).toBeUndefined();
   });
   it("starts the next drag from the selection saved by the preceding drag", () => {
     const list = dragList("bottomNav");
     list.start(0); list.swap([1, 2, 0]); list.end(0);
     list.start(0); list.swap([0, 1, 2]); list.end(0);
-    expect(list.item.selected).toBe(0);
+    expect(list.item.selected).toBeUndefined();
+    expect(list.item.selectionImplicit).toBeUndefined();
+  });
+  it("makes a moved default explicit when the author selects it", () => {
+    const list = dragList("bottomNav");
+    list.start(0); list.swap([1, 2, 0]); list.end(0);
+    expect(list.item.selectionImplicit).toBe(true);
+    list.select(2);
+    expect(list.item.selected).toBe(2);
+    expect(list.item.selectionImplicit).toBeUndefined();
   });
 });

@@ -178,6 +178,26 @@ describe("preview screen modal lifecycle", () => {
   });
 });
 
+describe("preview navigation selection", () => {
+  it("shows the destination that opened a screen after its implicit default moved", () => {
+    hooks.refs = [];
+    hooks.present = true;
+    const element = screenElement();
+    const tabs = [{ icon: "search", label: "Search" }, { icon: "favorite", label: "Saved" }, { icon: "home", label: "Home" }];
+    const item: Item = { ...makeItem("navRail"), id: "nav", tabs, selected: 2, selectionImplicit: true };
+    const frame = { ...doc.frames[1] };
+    const groups: Group[] = [{ id: "target", x: frame.x, y: frame.y + 140, axis: "x", items: [item] }];
+    const navKey = "nav:navRail:Search|Saved|Home";
+    const render = (values: Record<string, number>, patch: Partial<Item> = {}) => {
+      const tree = renderScreen({ ...element, props: { ...element.props, frame, groups: [{ ...groups[0], items: [{ ...item, ...patch }] }], values } });
+      return elements(tree).find((node) => node.props.item && (node.props.item as Item).id === item.id)?.props.item as Item;
+    };
+    expect(render({ [`${navKey}:opened:${frame.id}`]: 0 }).selected).toBe(0);
+    expect(render({ [`${navKey}:opened:${frame.id}`]: 0 }, { selectionImplicit: undefined }).selected).toBe(2);
+    expect(render({ [navKey]: 1, [`${navKey}:opened:${frame.id}`]: 0 }).selected).toBe(1);
+  });
+});
+
 describe("preview of a screen longer than the device", () => {
   const part = (kind: Kind, id: string): Item => ({ ...makeItem(kind), id });
   const navH = sizeOf(part("bottomNav", "nav"), {}).h;
