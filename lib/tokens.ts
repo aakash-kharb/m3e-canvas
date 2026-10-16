@@ -2643,8 +2643,9 @@ export function reorderTabsPatch(it: Item, order: number[]): Pick<Item, "tabs" |
   };
 }
 
-/** the patch that drops entry i: later entries, the selected index and the tap targets move up one; a
- *  dropdown may end with no initial value, a bar or tab row keeps the entry that takes the removed one's place */
+/** the patch that drops entry i: later entries, the selected index and the tap targets move up one.
+ *  Removing the tracked implicitly selected entry clears the saved selection. Removing an explicitly
+ *  selected entry clears a dropdown's initial value; a navigation bar, rail or tab row selects its replacement. */
 export function removeTabPatch(it: Item, i: number): Pick<Item, "tabs" | "selected" | "selectionImplicit" | "actions"> {
   const tabs = (it.tabs ?? []).filter((_, j) => j !== i);
   const sel = it.selected;
