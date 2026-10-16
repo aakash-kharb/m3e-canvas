@@ -2650,7 +2650,8 @@ export function removeTabPatch(it: Item, i: number): Pick<Item, "tabs" | "select
   const sel = it.selected;
   const last = Math.max(0, tabs.length - 1);
   const selected =
-    sel === undefined ? undefined : sel > i ? sel - 1 : sel < i ? sel : it.kind === "select" ? undefined : Math.min(i, last);
+    sel === undefined || (it.selectionImplicit === true && sel === i) ? undefined
+      : sel > i ? sel - 1 : sel < i ? sel : it.kind === "select" ? undefined : Math.min(i, last);
   const implicit = it.selectionImplicit === true && sel !== i;
   return {
     tabs,

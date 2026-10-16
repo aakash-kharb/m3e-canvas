@@ -47,6 +47,30 @@ describe("selection when entries are reordered", () => {
     expect(first.selectionImplicit).toBeUndefined();
     const removed = removeTabPatch(moved, 2);
     expect(removed.selectionImplicit).toBeUndefined();
+    expect(removed.selected).toBeUndefined();
+  });
+
+  it.each<Kind>(["bottomNav", "navRail", "tabs"])("keeps selection implicit after removing the tracked %s entry", (kind) => {
+    for (const order of [[1, 0, 2, 3], [1, 2, 3, 0]]) {
+      const original = { ...makeItem(kind), tabs: [...tabs, { icon: "settings", label: "Settings" }], actions: {
+        "tab:0": { to: "home", transition: "fade" as const },
+        "tab:1": { to: "search", transition: "fade" as const },
+        "tab:2": { to: "saved", transition: "fade" as const },
+        "tab:3": { to: "settings", transition: "fade" as const },
+      } };
+      const moved = { ...original, ...reorderTabsPatch(original, order) };
+      const patch = removeTabPatch(moved, moved.selected!);
+      expect(patch.selected).toBeUndefined();
+      expect(patch.selectionImplicit).toBeUndefined();
+      expect(patch.tabs?.map((tab) => tab.label)).toEqual(["Search", "Saved", "Settings"]);
+      expect(patch.actions).toEqual({ "tab:0": original.actions["tab:1"], "tab:1": original.actions["tab:2"], "tab:2": original.actions["tab:3"] });
+    }
+  });
+
+  it.each<Kind>(["bottomNav", "navRail", "tabs"])("keeps an explicit replacement selected after removing a %s entry", (kind) => {
+    const patch = removeTabPatch({ ...makeItem(kind), tabs, selected: 2 }, 2);
+    expect(patch.selected).toBe(1);
+    expect(patch.selectionImplicit).toBeUndefined();
   });
 
   it("clears the implicit marker if a count change removes its entry", () => {
